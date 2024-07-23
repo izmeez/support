@@ -65,3 +65,8 @@ Seeking maintainers.
 **Sponsors**
 Development of the Support module for Drupal was originally sponsored by Tag1
 Consulting and now is maintained by Purencool Digital.
+
+**License**
+
+This project is GPL v2 software. See the LICENSE file in the project
+directory for complete text.
