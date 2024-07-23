@@ -6,7 +6,4 @@ version = 1.0.0-beta
 backdrop = 1.x
 stylesheets[all][] = support-tickets.css, support_charts.css,
 support-overview.css, support_reference.css
-dependencies[] = comment
-dependencies[] = file
 dependencies[] = entity
-dependencies[] = entity_api
