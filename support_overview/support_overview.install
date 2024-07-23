@@ -1,0 +1,37 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the support_overview module.
+ *
+ */
+
+
+/**
+ * Migrate support_overview variables to config.
+ */
+function support_overview_update_1000() {
+  $config = config('support_overview.settings');
+  $config->set('support_overview_clients', update_variable_get('support_overview_clients', array()));
+  $config->set('support_overview_states', update_variable_get('support_overview_states', array()));
+  $config->set('support_overview_priorities', update_variable_get('support_overview_priorities', array()));
+  $config->set('support_overview_alert1', update_variable_get('support_overview_alert1', '0'));
+  $config->set('support_overview_alert2', update_variable_get('support_overview_alert2', '0'));
+  $config->set('support_overview_alert3', update_variable_get('support_overview_alert3', '0'));
+  $config->set('support_overview_roles', update_variable_get('support_overview_roles', array()));
+  $config->save();
+
+  update_variable_del('support_overview_clients');
+  update_variable_del('support_overview_states');
+  update_variable_del('support_overview_priorities');
+  update_variable_del('support_overview_alert1');
+  update_variable_del('support_overview_alert2');
+  update_variable_del('support_overview_alert3');
+  update_variable_del('support_overview_roles');
+}
+
+/**
+ * Implements hook_install().
+ */
+function support_overview_install() {
+  // Dynamically generated variable data was detected.
+}

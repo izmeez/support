@@ -56,7 +56,10 @@ class SupportClientUIController extends EntityDefaultUIController {
     $colspan = 4;
     $colspan = $field_ui ? $colspan + 2 : $colspan;
     $colspan = $exportable ? $colspan + 1 : $colspan;
-    $header[] = array('data' => t('Operations'), 'colspan' => $colspan);
+    $header[] = array(
+      'data' => t('Operations'),
+      'colspan' => $colspan,
+    );
 
 
     $query = new EntityFieldQuery;
@@ -68,7 +71,7 @@ class SupportClientUIController extends EntityDefaultUIController {
     if (!empty($result['support_client'])) {
       $clients = entity_load('support_client', array_keys($result['support_client']), $conditions);
       foreach ($clients as $entity) {
-          $rows[] = $this->overviewTableRow($conditions, entity_id($this->entityType, $entity), $entity);
+        $rows[] = $this->overviewTableRow($conditions, entity_id($this->entityType, $entity), $entity);
       }
     }
     $render = array();
@@ -84,17 +87,19 @@ class SupportClientUIController extends EntityDefaultUIController {
   protected function overviewTableRow($conditions, $id, $entity, $additional_cols = array()) {
     $entity_uri = entity_uri($this->entityType, $entity);
 
-    $row[] = array('data' => array(
-      '#theme' => 'entity_ui_overview_item',
-      '#label' => entity_label($this->entityType, $entity),
-      '#name' => !empty($this->entityInfo['exportable']) ? entity_id($this->entityType, $entity) : FALSE,
-      '#url' => $entity_uri ? $entity_uri : FALSE,
-      '#entity_type' => $this->entityType),
+    $row[] = array(
+      'data' => array(
+        '#theme' => 'entity_ui_overview_item',
+        '#label' => entity_label($this->entityType, $entity),
+        '#name' => !empty($this->entityInfo['exportable'])?entity_id($this->entityType, $entity) : FALSE,
+        '#url' => $entity_uri ? $entity_uri : FALSE,
+        '#entity_type' => $this->entityType,
+      ),
     );
 
-    $row[] = $entity->status == 1 ? t('enabled') : t('disabled');
-    $row[] = $entity->integrate_email ? t('integrated') : t('not integrated');
-    $row[] = $entity->integrate_email ? check_plain($entity->mailfrom) : '<em>' . t('using default') . '</em>: ' . l(_support_admin_default_mail(), 'admin/support/settings');
+    $row[] = $entity->status == 1?t('enabled') : t('disabled');
+    $row[] = $entity->integrate_email?t('integrated') : t('not integrated');
+    $row[] = $entity->integrate_email?check_plain($entity->mailfrom) : '<em>' . t('using default') . '</em>: ' . l(_support_admin_default_mail(), 'admin/support/settings');
 
 
     // Add in any passed additional cols.
@@ -105,9 +110,9 @@ class SupportClientUIController extends EntityDefaultUIController {
     // Add a row for the exportable status.
     if (!empty($this->entityInfo['exportable'])) {
       $row[] = array('data' => array(
-        '#theme' => 'entity_status',
-        '#status' => $entity->{$this->statusKey},
-      ));
+          '#theme' => 'entity_status',
+          '#status' => $entity->{$this->statusKey},
+        ));
     }
     // In case this is a bundle, we add links to the field ui tabs.
     $field_ui = !empty($this->entityInfo['bundle of']) && module_exists('field_ui');
@@ -119,7 +124,10 @@ class SupportClientUIController extends EntityDefaultUIController {
 
     // Add operations depending on the status.
     if (entity_has_status($this->entityType, $entity, ENTITY_FIXED)) {
-      $row[] = array('data' => l(t('clone'), $this->path . '/manage/' . $id . '/clone'), 'colspan' => $colspan);
+      $row[] = array(
+        'data' => l(t('clone'), $this->path . '/manage/' . $id . '/clone'),
+        'colspan' => $colspan,
+      );
     }
     else {
       $row[] = l(t('edit'), $this->path . '/manage/' . $id);
@@ -133,10 +141,10 @@ class SupportClientUIController extends EntityDefaultUIController {
 
       $row[] = l(t('clone'), $this->path . '/manage/' . $id . '/clone');
       if (empty($this->entityInfo['exportable']) || !entity_has_status($this->entityType, $entity, ENTITY_IN_CODE)) {
-        $row[] = l(t('delete'), $this->path . '/manage/' . $id . '/delete', array('query' => drupal_get_destination()));
+        $row[] = l(t('delete'), $this->path . '/manage/' . $id . '/delete', array('query' => backdrop_get_destination()));
       }
       elseif (entity_has_status($this->entityType, $entity, ENTITY_OVERRIDDEN)) {
-        $row[] = l(t('revert'), $this->path . '/manage/' . $id . '/revert', array('query' => drupal_get_destination()));
+        $row[] = l(t('revert'), $this->path . '/manage/' . $id . '/revert', array('query' => backdrop_get_destination()));
       }
       else {
         $row[] = '';
@@ -147,4 +155,4 @@ class SupportClientUIController extends EntityDefaultUIController {
     }
     return $row;
   }
-};
+}

@@ -19,17 +19,21 @@ define('DIVIDER1', 9991);
 define('DIVIDER2', 9992);
 define('DIVIDER3', 9993);
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_reports() {
   $form = array();
 
   // $period must be an integer
-  $period = isset($_GET['rp']) ? (int)$_GET['rp'] : NULL;
+  $period = isset($_GET['rp']) ? (int) $_GET['rp'] : NULL;
   // $type must be an integer
-  $type = isset($_GET['rt']) ? (int)$_GET['rt'] : NULL;
+  $type = isset($_GET['rt']) ? (int) $_GET['rt'] : NULL;
   // $roles must be a comma-separated list of integer
-  $roles = isset($_GET['rr']) ? explode(',', preg_replace('/[^0-9,]/', '', $_GET['rr'])) : NULL;
+  $roles = isset($_GET['rr'])?explode(',', preg_replace('/[^0-9,]/', '', $_GET['rr'])) : NULL;
   // $clients must be a comma-separated list of integer
-  $clients = isset($_GET['rc']) ? explode(',', preg_replace('/[^0-9,]/', '', $_GET['rc'])) : NULL;
+  $clients = isset($_GET['rc'])?explode(',', preg_replace('/[^0-9,]/', '', $_GET['rc'])) : NULL;
 
   if (!is_null($period) && !is_null($period)) {
     switch ($type) {
@@ -95,9 +99,12 @@ function support_pm_admin_reports() {
     }
 
     $header_details = array('');
-    $row = array('<strong>'. t('Plan') .'</strong>');
-    $row2 = array('<strong>'. t('Actual') .'</strong>');
-    $totals = array('client_plan' => array(), 'user_plan' => array());
+    $row = array('<strong>' . t('Plan') . '</strong>');
+    $row2 = array('<strong>' . t('Actual') . '</strong>');
+    $totals = array(
+      'client_plan' => array(),
+      'user_plan' => array(),
+    );
     $hours_client = array();
     $hours_user = array();
     for ($i = 0; $i < $days; $i++) {
@@ -201,8 +208,8 @@ function support_pm_admin_reports() {
     }
 
     $header_client = array(t('Plan'));
-    $client_plan_sum = is_array($totals['client_plan']) ? array_sum($totals['client_plan']) : 0;
-    $client_actual_sum = is_array($totals['client_actual']) ? array_sum($totals['client_actual']) : 0;
+    $client_plan_sum = is_array($totals['client_plan'])?array_sum($totals['client_plan']) : 0;
+    $client_actual_sum = is_array($totals['client_actual'])?array_sum($totals['client_actual']) : 0;
     $max = $client_plan_sum > $client_actual_sum ? $client_plan_sum : $client_actual_sum;
     $row = array(theme('support_pm_user_hours_summary', array('totals' => $totals['client_plan'], 'load_callback' => 'support_client_load', 'max' => $max, 'message' => t('Not scheduled'))));
     if (count($row2) > 1) {
@@ -212,8 +219,8 @@ function support_pm_admin_reports() {
     $rows_client = array($row);
 
     $header_user = array(t('Plan'));
-    $user_plan_sum = is_array($totals['user_plan']) ?  array_sum($totals['user_plan']) : 0;
-    $user_actual_sum = is_array($totals['user_actual']) ? array_sum($totals['user_actual']) : 0;
+    $user_plan_sum = is_array($totals['user_plan'])?  array_sum($totals['user_plan']) : 0;
+    $user_actual_sum = is_array($totals['user_actual'])?array_sum($totals['user_actual']) : 0;
     $max = $user_plan_sum > $user_actual_sum ? $user_plan_sum : $user_actual_sum;
     $row = array(theme('support_pm_user_hours_summary', array('totals' => $totals['user_plan'], 'load_callback' => 'user_load', 'max' => $max, 'message' => t('Not scheduled'))));
     if (count($row2) > 1) {
@@ -255,7 +262,15 @@ function support_pm_admin_reports() {
     '#type' => 'select',
     '#title' => t('Period'),
     //'#options' => array(SUPPORT_PM_THISWEEK => t('This week'), SUPPORT_PM_LASTWEEK => t('Last week'), SUPPORT_PM_NEXTWEEK => t('Next week'), DIVIDER1 => '--', SUPPORT_PM_THISMONTH => t('This month'), SUPPORT_PM_LASTMONTH => t('Last month'), SUPPORT_PM_NEXTMONTH => t('Next month'), DIVIDER2 => '--', SUPPORT_PM_THISQUARTER => t('This quarter'), SUPPORT_PM_LASTQUARTER => t('Last quarter'), SUPPORT_PM_NEXTQUARTER => t('Next quarter'), DIVIDER3 => '--', SUPPORT_PM_THISYEAR => t('This year'), SUPPORT_PM_LASTYEAR => t('Last year'), SUPPORT_PM_NEXTYEAR => t('Next year')),
-    '#options' => array(SUPPORT_PM_THISWEEK => t('This week'), SUPPORT_PM_LASTWEEK => t('Last week'), SUPPORT_PM_NEXTWEEK => t('Next week'), DIVIDER1 => '--', SUPPORT_PM_THISMONTH => t('This month'), SUPPORT_PM_LASTMONTH => t('Last month'), SUPPORT_PM_NEXTMONTH => t('Next month')),
+    '#options' => array(
+      SUPPORT_PM_THISWEEK => t('This week'),
+      SUPPORT_PM_LASTWEEK => t('Last week'),
+      SUPPORT_PM_NEXTWEEK => t('Next week'),
+      DIVIDER1 => '--',
+      SUPPORT_PM_THISMONTH => t('This month'),
+      SUPPORT_PM_LASTMONTH => t('Last month'),
+      SUPPORT_PM_NEXTMONTH => t('Next month'),
+    ),
     '#default_value' => !is_null($period) ? $period : 0,
     '#description' => t('Select the duration of your report.'),
     '#required' => TRUE,
@@ -288,7 +303,7 @@ function support_pm_admin_reports() {
 
   $available_clients = _support_available_clients();
   if (empty($available_clients)) {
-    drupal_set_message(t('You must !create a client before you can generate reports.', array('!create' => l(t('create and enable'), 'admin/support/clients/add'))), 'error');
+    backdrop_set_message(t('You must !create a client before you can generate reports.', array('!create' => l(t('create and enable'), 'admin/support/clients/add'))), 'error');
   }
   $form['optional']['report_client'] = array(
     '#type' => 'select',
@@ -306,6 +321,10 @@ function support_pm_admin_reports() {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_reports_submit($form, &$form_state) {
   $args = array();
   $args['rp'] = $form_state['values']['report_period'];
@@ -316,21 +335,37 @@ function support_pm_admin_reports_submit($form, &$form_state) {
   if (!empty($form_state['values']['report_client'])) {
     $args['rc'] = implode(',', $form_state['values']['report_client']);
   }
-  drupal_goto('admin/support/plan_report', array('query' => $args));
+  backdrop_goto('admin/support/plan_report', array('query' => $args));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function _support_pm_first_day_month($time) {
   return (strtotime(date('M 1, Y 12:00', $time)));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function _support_pm_last_day_month($time) {
-  return (strtotime(date('M '. _support_pm_days_in_month($time) .', Y 12:00', $time)));
+  return (strtotime(date('M ' . _support_pm_days_in_month($time) . ', Y 12:00', $time)));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function _support_pm_days_in_month($time) {
   return date('j', (mktime(date('H', $time), date('i', $time), date('s', $time), date('n', $time), -1)));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_aggregate_client($day) {
   // TODO: Count the # of people involved, give 12 hours per person to breakdown scale
   $aggregate = array();
@@ -347,6 +382,10 @@ function support_pm_aggregate_client($day) {
   return $aggregate;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_aggregate_user($day) {
   // TODO: Count the # of people involved, give 12 hours per person to breakdown scale
   $aggregate = array();
@@ -363,12 +402,16 @@ function support_pm_aggregate_user($day) {
   return $aggregate;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_settings() {
   $form = array();
 
-  $color_values = variable_get('support_pm_color_values', array());
+  $color_values = config_get('support_pm.settings', 'support_pm_color_values');
   if (empty($color_values)) {
-    drupal_set_message(t('You must !url before you can edit colors here.', array('!url' => l(t('run a plan report'), 'admin/support/plan_report'))));
+    backdrop_set_message(t('You must !url before you can edit colors here.', array('!url' => l(t('run a plan report'), 'admin/support/plan_report'))));
   }
   foreach ($color_values as $type => $values) {
     arsort($values);
@@ -416,7 +459,7 @@ function support_pm_admin_settings() {
         '#title' => $title,
         '#required' => TRUE,
         '#default_value' => $color,
-        '#description' => "$title color: <img src=\"". url('support_pm/image/') . $color .'" alt="swatch" height="15" width="15" />',
+        '#description' => "$title color: <img src=\"" . url('support_pm/image/') . $color . '" alt="swatch" height="15" width="15" />',
       );
     }
   }
@@ -441,6 +484,10 @@ function support_pm_admin_settings() {
 
 // TODO: Validate colors
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_settings_submit($form, &$form_state) {
   $values = array();
   if (!empty($form_state['values']['clients'])) {
@@ -455,8 +502,8 @@ function support_pm_admin_settings_submit($form, &$form_state) {
       $values['user'][$uid] = $form_state['values']["user-$uid"];
     }
   }
-  variable_set('support_pm_color_values', $values);
-  drupal_set_message('Support plan colors updated.');
+  config_set('support_pm.settings', 'support_pm_color_values', $values);
+  backdrop_set_message('Support plan colors updated.');
 }
 
 /**
@@ -466,10 +513,19 @@ function support_pm_admin_project_overview() {
   $rows = array();
 
   $header = array(
-    array('data' => t('Project'), 'field' => 'sp.project'),
+    array(
+      'data' => t('Project'),
+      'field' => 'sp.project',
+    ),
     array('data' => t('Client(s)')),
-    array('data' => t('Weight'), 'field'=> 'sp.weight'),
-    array('data' => t('Disabled'), 'field'=> 'sp.disabled'),
+    array(
+      'data' => t('Weight'),
+      'field' => 'sp.weight',
+    ),
+    array(
+      'data' => t('Disabled'),
+      'field' => 'sp.disabled',
+    ),
     array('data' => t('Options')),
   );
   $query = db_select('support_project', 'sp')->extend('TableSort')->extend('PagerDefault');
@@ -486,26 +542,30 @@ function support_pm_admin_project_overview() {
       $clients[] = check_plain($client->name);
     }
     if (empty($clients)) {
-      $clients[] = '<em>'. t('All clients') .'</em>';
+      $clients[] = '<em>' . t('All clients') . '</em>';
     }
 
     $rows[] = array(
       truncate_utf8(check_plain($project->project), 52, TRUE, TRUE),
       implode(', ', $clients),
       number_format($project->weight),
-      $project->disabled ? t('Disabled') : t('Active'),
+      $project->disabled?t('Disabled') : t('Active'),
       $options,
     );
   }
 
   if (empty($rows)) {
-    drupal_set_message(t('There are currently no projects defined.'));
+    backdrop_set_message(t('There are currently no projects defined.'));
   }
   $output = theme('table', array('header' => $header, 'rows' => $rows));
   $output .= theme('pager');
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_project_form($form, &$form_state, $project = array()) {
   $form['project'] = array(
     '#title' => t('Project'),
@@ -548,7 +608,7 @@ function support_pm_admin_project_form($form, &$form_state, $project = array()) 
     '#options' => $clients,
     '#multiple' => TRUE,
     '#required' => TRUE,
-    '#size' => count($clients) > 5 ? count($clients) : 5,
+    '#size' => count($clients) > 5?count($clients) : 5,
     '#default_value' => isset($project->clids) ? $project->clids : array(0),
     '#description' => t('Select the client(s) this project applies to.'),
   );
@@ -619,11 +679,11 @@ function support_pm_admin_project_form_submit($form, &$form_state) {
 
   if ($projid) {
     db_update('support_project')->fields($fields)->condition('projid', $projid)->execute();
-    drupal_set_message(t('Updated %project project.', array('%project' => $form_state['values']['project'])));
+    backdrop_set_message(t('Updated %project project.', array('%project' => $form_state['values']['project'])));
   }
   else {
     $projid = db_insert('support_project')->fields($fields)->execute();
-    drupal_set_message(t('Created %project project.', array('%project' => $form_state['values']['project'])));
+    backdrop_set_message(t('Created %project project.', array('%project' => $form_state['values']['project'])));
   }
 
   db_delete('support_project_client')->condition('projid', $projid)->execute();
@@ -635,7 +695,7 @@ function support_pm_admin_project_form_submit($form, &$form_state) {
   }
 
   menu_rebuild();
-  drupal_goto('admin/support/project');
+  backdrop_goto('admin/support/project');
 }
 
 /**
@@ -644,21 +704,29 @@ function support_pm_admin_project_form_submit($form, &$form_state) {
 function support_pm_admin_project_form_delete_submit($form, &$form_state) {
   $destination = array();
   if (isset($_GET['destination'])) {
-    $destination = drupal_get_destination();
+    $destination = backdrop_get_destination();
     unset($_GET['destination']);
   }
   $project = $form['#project'];
   $form_state['redirect'] = array('admin/support/project/' . $project->projid . '/delete', array('query' => $destination));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_project_delete_form($form, &$form_state, $project) {
   $form['#project'] = $project;
   return confirm_form($form, t('Are you sure you want to delete %project?', array('%project' => $project->project)), 'admin/support/project', t('This action cannot be undone.'), t('Delete'), t('Cancel'));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_pm_admin_project_delete_form_submit($form, &$form_state) {
   $project = $form['#project'];
-  drupal_set_message(t('Deleted %project project.', array('%project' => $project->project)));
+  backdrop_set_message(t('Deleted %project project.', array('%project' => $project->project)));
   db_delete('support_project')->condition('projid', $project->projid)->execute();
   db_delete('support_project_client')->condition('projid', $project->projid)->execute();
   db_delete('support_project_ticket')->condition('projid', $project->projid)->execute();

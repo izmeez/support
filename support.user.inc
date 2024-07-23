@@ -4,13 +4,14 @@
  *
  */
 function support_page_user($user, $assigned = FALSE, $state = NULL) {
+  $config = config('support.settings');
   $result = array();
-  drupal_add_css(drupal_get_path('module', 'support') . '/support-tickets.css');
+  backdrop_add_css(backdrop_get_path('module', 'support') . '/support-tickets.css');
   if ($assigned) {
-    drupal_set_title(t("@username's assigned tickets", array('@username' => $user->name)), PASS_THROUGH);
+    backdrop_set_title(t("@username's assigned tickets", array('@username' => $user->name)), PASS_THROUGH);
   }
   else {
-    drupal_set_title(t("@username's latest tickets", array('@username' => $user->name)), PASS_THROUGH);
+    backdrop_set_title(t("@username's latest tickets", array('@username' => $user->name)), PASS_THROUGH);
   }
 
   if (!$state) {
@@ -18,18 +19,31 @@ function support_page_user($user, $assigned = FALSE, $state = NULL) {
   }
   $state = _support_get_state($state);
 
-  $sort = variable_get('support_default_sort_tickets', SUPPORT_SORT_UPDATE);
-  if (variable_get('support_default_sort_order', SUPPORT_SORT_DESC) == SUPPORT_SORT_DESC) {
+  $sort = $config->get('support_default_sort_tickets');
+  if ($config->get('support_default_sort_order') == SUPPORT_SORT_DESC) {
     $order = 'desc';
   }
   else {
     $order = 'asc';
   }
   foreach (array(
-    SUPPORT_SORT_UPDATE => array('data' => t('Updated'), 'field' => 'last_updated'),
-    SUPPORT_SORT_NID => array('data' => t('Id'), 'field' => 'n.nid'),
-    SUPPORT_SORT_STATE => array('data' => t('State'), 'field' => 't.state'),
-    SUPPORT_SORT_PRIORITY => array('data' => t('Priority'), 'field' => 't.priority')) as $key => $array) {
+    SUPPORT_SORT_UPDATE => array(
+      'data' => t('Updated'),
+      'field' => 'last_updated',
+    ),
+    SUPPORT_SORT_NID => array(
+      'data' => t('Id'),
+      'field' => 'n.nid',
+    ),
+    SUPPORT_SORT_STATE => array(
+      'data' => t('State'),
+      'field' => 't.state',
+    ),
+    SUPPORT_SORT_PRIORITY => array(
+      'data' => t('Priority'),
+      'field' => 't.priority',
+    ),
+  ) as $key => $array) {
     if ($sort == $key) {
       $headers[$key] = $array + array('sort' => $order);
     }
@@ -41,13 +55,25 @@ function support_page_user($user, $assigned = FALSE, $state = NULL) {
   $rows = array();
   $header = array(
     $headers[SUPPORT_SORT_NID],
-    array('data' => t('Ticket'), 'field' => 'n.title'),
+    array(
+      'data' => t('Ticket'),
+      'field' => 'n.title',
+    ),
     $headers[SUPPORT_SORT_UPDATE],
-    array('data' => t('Reported by'), 'field' => 'n.uid'),
-    array('data' => t('Assigned to'), 'field' => 't.assigned'),
+    array(
+      'data' => t('Reported by'),
+      'field' => 'n.uid',
+    ),
+    array(
+      'data' => t('Assigned to'),
+      'field' => 't.assigned',
+    ),
     $headers[SUPPORT_SORT_STATE],
     $headers[SUPPORT_SORT_PRIORITY],
-    array('data' => t('Updates'), 'field' => 's.comment_count'),
+    array(
+      'data' => t('Updates'),
+      'field' => 's.comment_count',
+    ),
   );
 
   if (_support_access_tickets() > 1) {
@@ -98,7 +124,7 @@ function support_page_user($user, $assigned = FALSE, $state = NULL) {
       ->distinct()
       ->addExpression('GREATEST(n.changed, s.last_comment_timestamp)', 'last_updated');
 
-    switch (variable_get('support_secondary_sort_tickets', SUPPORT_SORT_NONE)) {
+    switch ($config->get('support_secondary_sort_tickets')) {
       case SUPPORT_SORT_UPDATE:
         $query->orderBy('last_updated', $order);
         break;
@@ -118,7 +144,7 @@ function support_page_user($user, $assigned = FALSE, $state = NULL) {
   $row = 0;
   $rows = array();
   foreach ($result as $ticket) {
-    drupal_alter('support_page_list_ticket', $ticket);
+    backdrop_alter('support_page_list_ticket', $ticket);
     $account = user_load($ticket->uid);
     $assigned = user_load($ticket->assigned);
     $comments = l($ticket->comment_count, "node/$ticket->nid", array('fragment' => 'comments'));
@@ -170,11 +196,12 @@ function support_page_user($user, $assigned = FALSE, $state = NULL) {
     $row++;
   }
 
-  if (count($rows) == 0)
+  if (count($rows) == 0) {
     $rows[] = array(array(
-      'data' => t('No tickets available.'),
-      'colspan' => count($header),
-    ));
+        'data' => t('No tickets available.'),
+        'colspan' => count($header),
+      ));
+  }
 
   return theme('support_page_user', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('support'))));
 }

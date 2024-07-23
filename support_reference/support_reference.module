@@ -50,7 +50,7 @@ function support_reference_block_info() {
       // XSRF protection by setting $form['#token'] = FALSE in the
       // builder, but it's probably a bad idea for this form, which doesn't
       // have confirm page protection.
-      'cache' => DRUPAL_NO_CACHE,
+      'cache' => BACKDROP_NO_CACHE,
     ),
   );
 }
@@ -85,7 +85,7 @@ function support_reference_block_view($delta = '') {
           $view = theme('item_list', array('items' => $references));
         }
         if (user_access('edit support ticket references')) {
-          $edit = drupal_get_form('support_reference_block_form', $node->client, $node);
+          $edit = backdrop_get_form('support_reference_block_form', $node->client, $node);
         }
         $block['content'][] = array('#markup' => $view);
         $block['content'][] = $edit;
@@ -96,8 +96,12 @@ function support_reference_block_view($delta = '') {
   return $block;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_reference_block_form($form, &$form_state, $client, $node) {
-  $path = drupal_get_path('module', 'support_reference');
+  $path = backdrop_get_path('module', 'support_reference');
   $form['#attached']['library'][] = array('system', 'ui.autocomplete');
   $form['#attached']['css'][] = "$path/support_reference.css";
   $form['#attached']['js'][] = "$path/support_reference.js";
@@ -124,6 +128,10 @@ function support_reference_block_form($form, &$form_state, $client, $node) {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_reference_block_form_submit($form, &$form_state) {
   $nid = $form['#nid'];
 
@@ -165,14 +173,14 @@ function support_reference_autocomplete($client = NULL, $skipnid = 0) {
       // We are using the titles directly from the database instead of using node_load() for speed / memory reasons.
       if (!empty($ticket->rnid)) {
         // If rnid is non null, there's a reference already, so indicate that choosing it will cause removal.
-        // NOTE: check_plain() here causes double escaping on Drupal 7. (But not Drupal 6!)
+        // NOTE: check_plain() here causes double escaping on Backdrop 7. (But not Backdrop 6!)
         $matches[] = t('[#!nid]: !title (remove)', array('!nid' => $ticket->nid, '!title' => $ticket->title));
       }
       else {
-        // NOTE: check_plain() here causes double escaping on Drupal 7. (But not Drupal 6!)
+        // NOTE: check_plain() here causes double escaping on Backdrop 7. (But not Backdrop 6!)
         $matches[] = t('[#!nid]: !title', array('!nid' => $ticket->nid, '!title' => $ticket->title));
       }
     }
   }
-  drupal_json_output($matches);
+  backdrop_json_output($matches);
 }

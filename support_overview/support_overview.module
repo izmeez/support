@@ -65,10 +65,10 @@ function support_overview_menu() {
   $items['admin/support/overview'] = array(
     'title' => 'Overview settings',
     'description' => 'Support client overview',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('support_overview_summary_settings'),
     'access arguments' => array('administer support overview'),
-//    'type' => MENU_DEFAULT_LOCAL_TASK,
+    //    'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 2,
   );
 
@@ -76,13 +76,25 @@ function support_overview_menu() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function support_overview_config_info() {
+  $prefixes['support_overview.settings'] = array(
+    'label' => t('Support settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Display support ticket overview, highlighting ticket queues with tickets
  * older than a configurable age limit.
  */
 function support_overview_summary() {
-  drupal_add_css(drupal_get_path('module', 'support_overview') . '/support-overview.css');
+  $config = config('support_overview.settings');
+  backdrop_add_css(backdrop_get_path('module', 'support_overview') . '/support-overview.css');
   // Determine which clients to display
-  $enabled_clients = variable_get('support_overview_clients', array());
+  $enabled_clients = $config->get('support_overview_clients');
   if (!is_array($enabled_clients) || empty($enabled_clients)) {
     $enabled_clients = _support_available_clients();
   }
@@ -95,7 +107,7 @@ function support_overview_summary() {
     }
   }
 
-  $enabled_states = variable_get('support_overview_states', array());
+  $enabled_states = $config->get('support_overview_states');
   if (!is_array($enabled_states) || empty($enabled_states)) {
     $states = _support_states();
   }
@@ -114,7 +126,7 @@ function support_overview_summary() {
   $output = '<div class="support-overview">';
   $header = array('tickets', 'all');
 
-  $enabled_priorities = variable_get('support_overview_priorities', array());
+  $enabled_priorities = $config->get('support_overview_priorities');
   foreach ($enabled_priorities as $pid) {
     $header[] = _support_priorities($pid);
   }
@@ -155,10 +167,10 @@ function support_overview_summary() {
         $alerts = "$latest_alert $oldest_alert";
 
         $node = node_load($latest->nid);
-        $latest_update = $latest->last_update ? t('most recent: !time, "!title"', array('!time' => format_interval(time() - $latest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
+        $latest_update = $latest->last_update?t('most recent: !time, "!title"', array('!time' => format_interval(time() - $latest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
         if ($latest->last_update != $oldest->last_update) {
           $node = node_load($oldest->nid);
-          $oldest_update = $oldest->last_update ? t('oldest: !time, "!title"', array('!time' => format_interval(time() - $oldest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
+          $oldest_update = $oldest->last_update?t('oldest: !time, "!title"', array('!time' => format_interval(time() - $oldest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
         }
         else {
           $oldest_update = '';
@@ -238,10 +250,10 @@ function support_overview_summary() {
       $alerts = "$latest_alert $oldest_alert";
 
       $node = node_load($latest->nid);
-      $latest_update = $latest->last_update ? t('most recent: !time, "!title"', array('!time' => format_interval(time() - $latest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
+      $latest_update = $latest->last_update?t('most recent: !time, "!title"', array('!time' => format_interval(time() - $latest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
       if ($latest->last_update != $oldest->last_update) {
         $node = node_load($oldest->nid);
-        $oldest_update = $oldest->last_update ? t('oldest: !time, "!title"', array('!time' => format_interval(time() - $oldest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
+        $oldest_update = $oldest->last_update?t('oldest: !time, "!title"', array('!time' => format_interval(time() - $oldest->last_update), '!title' => l($node->title, "node/$node->nid"))) : '';
       }
       else {
         $oldest_update = '';
@@ -295,7 +307,8 @@ function support_overview_summary() {
  * Configure what to display on the summary page.
  */
 function support_overview_summary_settings() {
-  drupal_set_title(t('Support overview settings'));
+  $config = config('support_overview.settings');
+  backdrop_set_title(t('Support overview settings'));
   $form = array();
   $clients = _support_available_clients();
   $form['clients'] = array(
@@ -305,7 +318,7 @@ function support_overview_summary_settings() {
     '#options' => $clients,
     '#size' => count($clients) > 10 ? 10 : count($clients),
     '#description' => t('If no clients are selected, all clients will be included on the overview page.  Otherwise, only the selected clients will be included on the overview page.'),
-    '#default_value' => variable_get('support_overview_clients', array()),
+    '#default_value' => $config->get('support_overview_clients'),
   );
   $states = _support_states();
   $states[0] = t('all');
@@ -316,7 +329,7 @@ function support_overview_summary_settings() {
     '#options' => $states,
     '#size' => count($states) > 10 ? 10 : count($states),
     '#description' => t('If no states are selected, all states will be broken out on the overview page.  Otherwise, only the selected states will be broken out on the overview page.'),
-    '#default_value' => variable_get('support_overview_states', array()),
+    '#default_value' => $config->get('support_overview_states'),
   );
   $priorities = _support_priorities();
   $form['priorities'] = array(
@@ -326,7 +339,7 @@ function support_overview_summary_settings() {
     '#options' => $priorities,
     '#size' => count($priorities) > 10 ? 10 : count($priorities),
     '#description' => t('Select one or more priorities to display an extra column showing tickets of this priority.  If no priorities are selected, tickets won\'t be displayed by priority.'),
-    '#default_value' => variable_get('support_overview_priorities', array()),
+    '#default_value' => $config->get('support_overview_priorities'),
   );
 
   $form['alerts'] = array(
@@ -334,26 +347,26 @@ function support_overview_summary_settings() {
     '#title' => t('Alerts'),
     '#collapsible' => TRUE,
   );
-  $options = array('0' => t('Never')) + drupal_map_assoc(array(86400, 86400 * 2, 86400 * 3, 86400 * 4, 86400 * 5, 86400 * 6, 86400 * 7, 86400 * 14, 86400 * 21, 86400 * 28), 'format_interval');
+  $options = array('0' => t('Never')) + backdrop_map_assoc(array(86400, 86400 * 2, 86400 * 3, 86400 * 4, 86400 * 5, 86400 * 6, 86400 * 7, 86400 * 14, 86400 * 21, 86400 * 28), 'format_interval');
   $form['alerts']['alert1'] = array(
     '#type' => 'select',
     '#title' => 'Alert level 1',
     '#options' => $options,
-    '#default_value' => variable_get('support_overview_alert1', 0),
+    '#default_value' => $config->get('support_overview_alert1'),
     '#description' => t('Tickets that haven\'t been updated for more than the specified time will be marked with a "alert1" CSS class.'),
   );
   $form['alerts']['alert2'] = array(
     '#type' => 'select',
     '#title' => 'Alert level 2',
     '#options' => $options,
-    '#default_value' => variable_get('support_overview_alert2', 0),
+    '#default_value' => $config->get('support_overview_alert2'),
     '#description' => t('Tickets that haven\'t been updated for more than the specified time will be marked with a "alert2" CSS class.'),
   );
   $form['alerts']['alert3'] = array(
     '#type' => 'select',
     '#title' => 'Alert level 3',
     '#options' => $options,
-    '#default_value' => variable_get('support_overview_alert3', 0),
+    '#default_value' => $config->get('support_overview_alert3'),
     '#description' => t('Tickets that haven\'t been updated for more than the specified time will be marked with a "alert3" CSS class.'),
   );
 
@@ -367,7 +380,7 @@ function support_overview_summary_settings() {
     '#multiple' => TRUE,
     '#title' => t('Display user from selected role(s)'),
     '#options' => user_roles(),
-    '#default_value' => variable_get('support_overview_roles', 0),
+    '#default_value' => $config->get('support_overview_roles'),
     '#description' => t('Optionally select one or more roles to limit users displayed on user overview pages.'),
   );
 
@@ -397,24 +410,25 @@ function support_overview_summary_settings_validate($form, &$form_state) {
  * Save overview settings.
  */
 function support_overview_summary_settings_submit($form, &$form_state) {
-  variable_set('support_overview_clients', $form_state['values']['clients']);
-  variable_set('support_overview_states', $form_state['values']['states']);
-  variable_set('support_overview_priorities', $form_state['values']['priorities']);
-  variable_set('support_overview_alert1', $form_state['values']['alert1']);
-  variable_set('support_overview_alert2', $form_state['values']['alert2']);
-  variable_set('support_overview_alert3', $form_state['values']['alert3']);
-  variable_set('support_overview_roles', $form_state['values']['roles']);
-  drupal_set_message('Overview settings updated.');
+  config_set('support_overview.settings', 'support_overview_clients', $form_state['values']['clients']);
+  config_set('support_overview.settings', 'support_overview_states', $form_state['values']['states']);
+  config_set('support_overview.settings', 'support_overview_priorities', $form_state['values']['priorities']);
+  config_set('support_overview.settings', 'support_overview_alert1', $form_state['values']['alert1']);
+  config_set('support_overview.settings', 'support_overview_alert2', $form_state['values']['alert2']);
+  config_set('support_overview.settings', 'support_overview_alert3', $form_state['values']['alert3']);
+  config_set('support_overview.settings', 'support_overview_roles', $form_state['values']['roles']);
+  backdrop_set_message('Overview settings updated.');
 }
 
 /**
  * Add CSS classes to highlight clients and users with old tickts.
  */
 function _support_overview_alert($time) {
+  $config = config('support_overview.settings');
   if (!empty($time)) {
-    $alert3 = variable_get('support_overview_alert3', 0);
-    $alert2 = variable_get('support_overview_alert2', 0);
-    $alert1 = variable_get('support_overview_alert1', 0);
+    $alert3 = $config->get('support_overview_alert3');
+    $alert2 = $config->get('support_overview_alert2');
+    $alert1 = $config->get('support_overview_alert1');
     // Level 3 alert
     if ($alert3 && time() - $time > $alert3) {
       return ' alert3';
@@ -431,10 +445,11 @@ function _support_overview_alert($time) {
 }
 
 /**
- * Implementation of hook_user().
+ * Implements hook_user().
  */
 function support_overview_user($type, &$edit, &$account) {
   global $user;
+  // TODO This variable was probably removed in Backdrop without replacement.
   if (variable_get('support_display_user_links', TRUE)) {
     if ($type == 'view' &&
        ((user_access('create support_ticket content', $account) && $user->uid == $account->uid)
@@ -445,27 +460,32 @@ function support_overview_user($type, &$edit, &$account) {
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_overview_page_user($account, $all = FALSE, $page = TRUE) {
+  $config = config('support_overview.settings');
   global $user;
   $output = '';
 
   if ($page) {
-    drupal_add_css(drupal_get_path('module', 'support_overview') . '/support-overview.css');
+    backdrop_add_css(backdrop_get_path('module', 'support_overview') . '/support-overview.css');
     $output = '<div class="support-overview">';
 
     if ($user->uid == $account->uid) {
-      drupal_set_title(t('My ticket overview'));
+      backdrop_set_title(t('My ticket overview'));
     }
     else {
-      drupal_set_title(t("@username's ticket overview", array('@username' => $account->name)));
+      backdrop_set_title(t("@username's ticket overview", array('@username' => $account->name)));
     }
     $breadcrumb = array();
     $breadcrumb[] = l(t('Home'), NULL);
     $breadcrumb[] = l($account->name, "user/$account->uid");
-    drupal_set_breadcrumb($breadcrumb);
+    backdrop_set_breadcrumb($breadcrumb);
   }
 
-  $enabled_clients = variable_get('support_overview_clients', array());
+  $enabled_clients = $config->get('support_overview_clients');
   $all_clients = _support_available_clients();
   if ($all || !is_array($enabled_clients) || empty($enabled_clients)) {
     $enabled_clients = array();
@@ -485,7 +505,7 @@ function support_overview_page_user($account, $all = FALSE, $page = TRUE) {
         ->condition('assigned', $account->uid);
       $total_sql->addExpression('COUNT(nid)');
 
-      $enabled_states = variable_get('support_overview_states', array());
+      $enabled_states = $config->get('support_overview_states');
       // [0] == 'All'
       if (!empty($enabled_states) && !isset($enabled_states[0])) {
         $total_sql->condition('state', $enabled_states);
@@ -539,16 +559,21 @@ function support_overview_page_user($account, $all = FALSE, $page = TRUE) {
   }
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
   if ($page) {
-    $output .= '<div class="support-overview-link">' . l($all ? t('selected clients') : t('all clients'), $all ? "support/overview/user/$account->uid" : "support/overview/user/$account->uid/all") . '</div>';
+    $output .= '<div class="support-overview-link">' . l($all?t('selected clients') : t('all clients'), $all ? "support/overview/user/$account->uid" : "support/overview/user/$account->uid/all") . '</div>';
     $output .= '</div>';
   }
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_overview_page_users($all = FALSE) {
-  drupal_add_css(drupal_get_path('module', 'support_overview') . '/support-overview.css');
+  $config = config('support_overview.settings');
+  backdrop_add_css(backdrop_get_path('module', 'support_overview') . '/support-overview.css');
   $output = '<div class="support-overview">';
-  $enabled_clients = variable_get('support_overview_clients', array());
+  $enabled_clients = $config->get('support_overview_clients');
   $all_clients = _support_available_clients();
   if ($all || !is_array($enabled_clients) || empty($enabled_clients)) {
     $enabled_clients = array();
@@ -558,7 +583,7 @@ function support_overview_page_users($all = FALSE) {
     $all = TRUE;
   }
 
-  $enabled_roles = variable_get('support_overview_roles', array());
+  $enabled_roles = $config->get('support_overview_roles');
 
   $sql = db_select('support_ticket', 't')
     ->fields('t', array('assigned'))
@@ -575,7 +600,7 @@ function support_overview_page_users($all = FALSE) {
     $sql->condition('t.assigned', 0, '!=');
   }
 
-  $enabled_states = variable_get('support_overview_states', array());
+  $enabled_states = $config->get('support_overview_states');
   // [0] == 'All'
   if (!empty($enabled_states) && !isset($enabled_states[0])) {
     $sql->condition('state', $enabled_states);
@@ -587,7 +612,7 @@ function support_overview_page_users($all = FALSE) {
     $output .= "<a href='" . url("support/overview/user/$uid") . "'><h3>" . check_plain($account->name) . '</h3></a>';
     $output .= support_overview_page_user($account, $all, FALSE);
   }
-  $output .= '<div class="support-overview-link">' . l($all ? t('selected clients') : t('all clients'), $all ? "support/overview/user" : "support/overview/user/all") . '</div>';
+  $output .= '<div class="support-overview-link">' . l($all?t('selected clients') : t('all clients'), $all ? "support/overview/user" : "support/overview/user/all") . '</div>';
   $output .= '</div>';
   return $output;
 }

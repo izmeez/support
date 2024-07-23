@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_support_fetch_message_alter().
+ * Implements hook_support_fetch_message_alter().
  */
 function support_mailcmd_support_fetch_message_alter(&$message, $client) {
   if (isset($message['uid'])) {
@@ -132,8 +132,12 @@ function support_mailcmd_support_fetch_message_alter(&$message, $client) {
         // @@@ addsub / delsub
     }
   }
-  $context = array('client' => $client, 'account' => $account, 'commands' => $commands);
-  drupal_alter('support_mailcmd_command', $message, $context);
+  $context = array(
+    'client' => $client,
+    'account' => $account,
+    'commands' => $commands,
+  );
+  backdrop_alter('support_mailcmd_command', $message, $context);
 }
 
 /**

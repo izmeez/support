@@ -1,0 +1,10 @@
+{
+    "_config_name": "support_overview.settings",
+    "support_overview_clients": [],
+    "support_overview_states": [],
+    "support_overview_priorities": [],
+    "support_overview_alert1": "0",
+    "support_overview_alert2": "0",
+    "support_overview_alert3": "0",
+    "support_overview_roles": []
+}

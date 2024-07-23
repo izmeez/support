@@ -35,16 +35,5 @@ function support_reference_schema() {
   return $schema;
 }
 
-/**
- * Remove hardcoded block deltas.
- */
-function support_reference_update_7000(&$sandbox) {
-  // Get an array of the renamed block deltas, organized by module.
-  $renamed_deltas = array(
-    'support_reference' => array(
-      '0' => 'support_reference_references',
-    ),
-  );
-
-  update_fix_d7_block_deltas($sandbox, $renamed_deltas);
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_reference_update_7000(&$sandbox) { }

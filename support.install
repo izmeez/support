@@ -426,7 +426,7 @@ function support_install() {
     ->execute();
 
   // default comment settings
-  variable_set('comment_default_mode_support_ticket', COMMENT_MODE_THREADED);
+  config_set('support.settings', 'comment_default_mode_support_ticket', COMMENT_MODE_THREADED);
   // TODO: Is there a replacement for this
   //variable_set('comment_default_order_support_ticket', COMMENT_ORDER_OLDEST_FIRST);
 
@@ -445,6 +445,9 @@ function support_install() {
 
   // Set up a file field for uploads.
   _support_ensure_upload_field();
+  // Dynamically generated variable data was detected on the following lines.
+  // /support/support.module line 1592
+  // /support/support.module line 2090
 }
 
 /**
@@ -470,28 +473,22 @@ function support_uninstall() {
 
   // Cleanup old support module variables.
   foreach (array('support_admin_notify', 'support_autoassign_ticket', 'support_autocomplete_limit', 'support_autocreate_users', 'support_autosubscribe_assigned', 'support_autosubscribe_creator', 'support_autosubscribe_force', 'support_cron_download_mail', 'support_default_sort_order', 'support_default_sort_tickets', 'support_disable_comment_reply', 'support_disable_post_comment', 'support_display_user_links', 'support_global_domains', 'support_global_mailfrom', 'support_notifications', 'support_override_block', 'support_override_theme', 'support_remove_tickets', 'support_require_comment', 'support_secondary_sort_order', 'support_secondary_sort_tickets', 'support_thread_by_mail_headers', 'support_thread_by_subject', 'support_use_aliased_urls', 'support_key', 'support_mail_ticket_comment_new_body', 'support_mail_ticket_comment_new_subject', 'support_mail_ticket_deny_body', 'support_mail_ticket_deny_subject', 'support_mail_ticket_new_body', 'support_mail_ticket_new_subject') as $variable) {
+    // TODO This variable was probably removed in Backdrop without replacement.
     variable_del($variable);
   }
 
 }
 
-/**
- * Remove unnecessary 'active' field from {support_assigned} table.
- */
-function support_update_6008() {
-  // Remove inactive entries from table.
-  db_delete('support_assigned')->condition('active', 0)->execute();
-  // Remove unnecessary status field.
-  db_drop_field('support_assigned', 'active');
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_6008() { }
 
 /**
- * Update 6009 skipped in Drupal 7.
+ * Update 6009 skipped in Backdrop 7.
  */
 /*
-function support_update_6009() {
-}
-*/
+ function support_update_6009() {
+ }
+ */
 
 /**
  * Make sure support_ticket has a field available for node and comment file attachments.
@@ -503,12 +500,13 @@ function _support_ensure_upload_field() {
   // If you want to migrate from the comment_upload data in D6 but don't want
   // to use this automatically created field, create a file field manually
   // and set this variable to the field name.
-  $field_name = variable_get('support_mail_upload_field', 'support_ticket_upload');
+  $field_name = config_get('support.settings', 'support_mail_upload_field');
 
   $info = field_info_field($field_name);
 
   if (!$info) {
     // Field is missing, create it.
+    // TODO This variable was probably removed in Backdrop without replacement.
     $field = array(
       'field_name' => $field_name,
       'type' => 'file',
@@ -526,8 +524,10 @@ function _support_ensure_upload_field() {
     field_create_field($field);
   }
 
+  // TODO This variable was probably removed in Backdrop without replacement.
   $upload_size = variable_get('upload_uploadsize_default', 1);
   // Base instance.
+  // TODO This variable was probably removed in Backdrop without replacement.
   $base_instance = array(
     'field_name' => $field_name,
     'entity_type' => NULL,
@@ -586,199 +586,101 @@ function _support_ensure_upload_field() {
   }
 }
 
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7000() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7001() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7002(&$sandbox) { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7003() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7004() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7005() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function support_update_7006() { }
+
 /**
- * Convert support mail variables to HTML.
+ * Implements hook_update_last_removed().
  */
-function support_update_7000() {
-  // Note: Other modules have to fix up their own variables.
-  $vars = array(
-    'support_mail_ticket_comment_new_body',
-    'support_mail_ticket_comment_new_subject',
-    'support_mail_ticket_deny_body',
-    'support_mail_ticket_deny_subject',
-    'support_mail_ticket_new_body',
-    'support_mail_ticket_new_subject',
-  );
-  foreach ($vars as $var) {
-    $fixed = str_replace(array("\r\n", "\n\r", "\n", "\r"), "<br />\n", variable_get($var, ''));
-    if (!empty($fixed)) {
-      variable_set($var, $fixed);
-    }
-  }
+function support_update_last_removed() {
+  return 7006;
 }
 
 /**
- * Ensure an upload field is created for uploading to comments.
+ * Migrate support variables to config.
  */
-function support_update_7001() {
-  _support_ensure_upload_field();
-}
+function support_update_1000() {
+  $config = config('support.settings');
+  $config->set('support_global_mailfrom', update_variable_get('support_global_mailfrom', ''));
+  $config->set('support_autocomplete_limit', update_variable_get('support_autocomplete_limit', '15'));
+  $config->set('support_autoassign_ticket', update_variable_get('support_autoassign_ticket', '<nobody>'));
+  $config->set('support_default_sort_tickets', update_variable_get('support_default_sort_tickets', 'SUPPORT_SORT_UPDATE'));
+  $config->set('support_default_sort_order', update_variable_get('support_default_sort_order', 'SUPPORT_SORT_DESC'));
+  $config->set('support_secondary_sort_tickets', update_variable_get('support_secondary_sort_tickets', 'SUPPORT_SORT_NONE'));
+  $config->set('support_secondary_sort_order', update_variable_get('support_secondary_sort_order', 'SUPPORT_SORT_DESC'));
+  $config->set('support_require_comment', update_variable_get('support_require_comment', TRUE));
+  $config->set('support_disable_post_comment', update_variable_get('support_disable_post_comment', array()));
+  $config->set('support_disable_comment_reply', update_variable_get('support_disable_comment_reply', array()));
+  $config->set('support_notifications', update_variable_get('support_notifications', TRUE));
+  $config->set('support_admin_notify', update_variable_get('support_admin_notify', array()));
+  $config->set('support_autosubscribe_creator', update_variable_get('support_autosubscribe_creator', array()));
+  $config->set('support_autosubscribe_force', update_variable_get('support_autosubscribe_force', array()));
+  $config->set('support_autosubscribe_assigned', update_variable_get('support_autosubscribe_assigned', array()));
+  $config->set('support_display_user_links', update_variable_get('support_display_user_links', TRUE));
+  $config->set('support_autocreate_users', update_variable_get('support_autocreate_users', TRUE));
+  $config->set('support_filter_uid1', update_variable_get('support_filter_uid1', array()));
+  $config->set('support_remove_tickets', update_variable_get('support_remove_tickets', TRUE));
+  $config->set('support_override_theme', update_variable_get('support_override_theme', array()));
+  $config->set('support_override_block', update_variable_get('support_override_block', array()));
+  $config->set('support_cron_download_mail', update_variable_get('support_cron_download_mail', TRUE));
+  $config->set('support_global_domains', update_variable_get('support_global_domains', ''));
+  $config->set('support_thread_by_mail_headers', update_variable_get('support_thread_by_mail_headers', TRUE));
+  $config->set('support_thread_by_subject', update_variable_get('support_thread_by_subject', '3'));
+  $config->set('support_use_aliased_urls', update_variable_get('support_use_aliased_urls', TRUE));
+  $config->set('support_key', update_variable_get('support_key', 'tkt'));
+  $config->set('support_mail_upload_field', update_variable_get('support_mail_upload_field', 'support_ticket_upload'));
+  $config->set('support_mail_key', update_variable_get('support_mail_key', 'dynamic variable in file /support/support.module line 1592'));
+  $config->set('support_mail_op_notify', update_variable_get('support_mail_op_notify', 'dynamic variable in file /support/support.module line 2090'));
+  $config->set('support_download_limit', update_variable_get('support_download_limit', '1000'));
+  $config->save();
 
-/**
- * Migrate comment_upload data for support.module to a file.module field.
- */
-function support_update_7002(&$sandbox) {
-  // Code was heavily based on system_update_7061().
-  if (!db_table_exists('comment_upload')) {
-    return;
-  }
-  $fieldname = variable_get('support_mail_upload_field', 'support_ticket_upload');
-
-  if (!isset($sandbox['progress'])) {
-    // Initialize batch update information.
-    $sandbox['progress'] = 0;
-    $sandbox['last_cid_processed'] = -1;
-    $sandbox['max'] = db_query("SELECT COUNT(*) FROM {comment_upload} u INNER JOIN {node} n ON u.nid = n.nid WHERE n.type = 'support_ticket'")->fetchField();
-  }
-
-  // Determine cids for this batch.
-  // Process all files attached to a given comment during the same batch.
-  $limit = variable_get('upload_update_batch_size', 100);
-  $cids = db_query_range("SELECT u.cid FROM {comment_upload} u INNER JOIN {node} n ON u.nid = n.nid WHERE n.type = 'support_ticket' AND u.cid > :lastcid ORDER BY cid", 0, $limit, array(':lastcid' => $sandbox['last_cid_processed']))
-    ->fetchCol();
-
-  // Retrieve information on all the files attached to these comments.
-  if (!empty($cids)) {
-    $comments = array();
-    $result = db_query('SELECT c.fid, c.nid, c.cid, c.description, c.list, c.weight FROM {comment_upload} c WHERE c.cid IN (:cids) ORDER BY c.cid, c.weight, c.fid', array(':cids' => $cids));
-    foreach ($result as $record) {
-      // For each uploaded file, retrieve the corresponding data from the old
-      // files table (since comment_upload doesn't know about the new entry in the
-      // file_managed table).
-      $file = db_select('files', 'f')
-        ->fields('f', array('fid', 'uid', 'filename', 'filepath', 'filemime', 'filesize', 'status', 'timestamp'))
-        ->condition('f.fid', $record->fid)
-        ->execute()
-        ->fetchAssoc();
-      if (!$file) {
-        continue;
-      }
-
-      // Add in the file information from the upload table.
-      $file['description'] = $record->description;
-      $file['display'] = $record->list;
-
-      // Create one record for each revision that contains all the uploaded
-      // files.
-      $comments[$record->cid]['cid'] = $record->cid;
-      $comments[$record->cid]['file'][LANGUAGE_NONE][] = $file;
-    }
-
-    // Now that we know which files belong to which comments, update the
-    // files'// database entries, and save a reference to each file in the
-    // upload field on their node revisions.
-    $basename = variable_get('file_directory_path', conf_path() . '/files');
-    $scheme = file_default_scheme() . '://';
-    foreach ($comments as $cid => $comment) {
-      foreach ($comment['file'][LANGUAGE_NONE] as $delta => $file) {
-        // We will convert filepaths to uri using the default scheme
-        // and stripping off the existing file directory path.
-        $file['uri'] = $scheme . str_replace($basename, '', $file['filepath']);
-        $file['uri'] = file_stream_wrapper_uri_normalize($file['uri']);
-        unset($file['filepath']);
-        // Insert into the file_managed table.
-        // Each fid should only be stored once in file_managed.
-        db_merge('file_managed')
-          ->key(array(
-            'fid' => $file['fid'],
-          ))
-          ->fields(array(
-            'uid' => $file['uid'],
-            'filename' => $file['filename'],
-            'uri' => $file['uri'],
-            'filemime' => $file['filemime'],
-            'filesize' => $file['filesize'],
-            'status' => $file['status'],
-            'timestamp' => $file['timestamp'],
-          ))
-          ->execute();
-
-        // Add the usage entry for the file.
-        $file = (object) $file;
-        file_usage_add($file, 'file', 'comment', $comment['cid']);
-
-        // Update the comment's upload file field with the file data.
-        $comment['file'][LANGUAGE_NONE][$delta] = array('fid' => $file->fid, 'display' => $file->display, 'description' => $file->description);
-      }
-
-      // Write the comment's upload field data into the field_upload tables.
-      $comment = (object) $comment;
-      _update_7000_field_sql_storage_write('comment', 'comment_node_support_ticket', $comment->cid, $comment->cid, $fieldname, $comment->file);
-
-      // Update our progress information for the batch update.
-      $sandbox['progress']++;
-      $sandbox['last_cid_processed'] = $cid;
-    }
-  }
-
-  // If less than limit comments were processed, the update process is
-  // finished.
-  if (count($cids) < $limit) {
-    $finished = TRUE;
-  }
-
-  // If there's no max value then there's nothing to update and we're finished.
-  if (empty($sandbox['max']) || isset($finished)) {
-    // Remove our processed migrated files while leaving the table (as people may be using comment_upload for other things as well)
-    $fids = db_query("SELECT fid FROM {comment_upload} c INNER JOIN {node} n ON c.nid = n.nid WHERE n.type = 'support_ticket'")->fetchCol();
-    db_delete('comment_upload')
-      ->condition('fid', $fids, 'IN')
-      ->execute();
-    return t('Comment Upload data associated with Support tickets has been migrated to File module.');
-  }
-  else {
-    // Indicate our current progress to the batch update system.
-    $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
-  }
-}
-
-/**
- * Ensure support_update_6008 has run: Remove unnecessary 'active' field from {support_assigned} table.
- */
-function support_update_7003() {
-  if (db_field_exists('support_assigned', 'active')) {
-    support_update_6008();
-  }
-}
-
-/**
- * Fix a performance issue with the primary key on {support_assigned}.
- */
-function support_update_7004() {
-  db_drop_primary_key('support_assigned');
-  db_add_primary_key('support_assigned', array('nid', 'uid'));
-}
-
-/**
- * Add an index on uid to {support_assigned}.
- */
-function support_update_7005() {
-  db_add_index('support_assigned', 'support_assigned_uid', array('uid'));
-}
-
-/**
- * Convert old built in add, edit, and delete permissions to those provided by Drupal 7 core node module.
- */
-function support_update_7006() {
-  $permissions = array(
-    'create tickets' => 'create support_ticket content',
-    'delete any ticket' => 'delete any support_ticket content',
-    'delete own tickets' => 'delete own support_ticket content',
-    'edit any ticket' => 'edit any support_ticket content',
-    'edit own tickets' => 'edit own support_ticket content');
-  foreach ($permissions as $old => $new) {
-    $old_permission = db_select('role_permission', 'r')
-      ->fields('r', array('rid'))
-      ->condition('r.permission', $old)
-      ->condition('r.module', 'support')
-      ->execute()
-      ->fetchObject();
-    // Convert old permissions to new permissions.
-    if (is_object($old_permission) && isset($old_permission->rid)) {
-      user_role_grant_permissions($old_permission->rid, array($new));
-      user_role_revoke_permissions($old_permission->rid, array($old));
-      $role = user_role_load($old_permission->rid);
-      drupal_set_message(t('Updated %role role %old permission to %new.', array('%role' => $role->name, '%old' => $old, '%new' => $new)));
-    }
-  }
+  update_variable_del('support_global_mailfrom');
+  update_variable_del('support_autocomplete_limit');
+  update_variable_del('support_autoassign_ticket');
+  update_variable_del('support_default_sort_tickets');
+  update_variable_del('support_default_sort_order');
+  update_variable_del('support_secondary_sort_tickets');
+  update_variable_del('support_secondary_sort_order');
+  update_variable_del('support_require_comment');
+  update_variable_del('support_disable_post_comment');
+  update_variable_del('support_disable_comment_reply');
+  update_variable_del('support_notifications');
+  update_variable_del('support_admin_notify');
+  update_variable_del('support_autosubscribe_creator');
+  update_variable_del('support_autosubscribe_force');
+  update_variable_del('support_autosubscribe_assigned');
+  update_variable_del('support_display_user_links');
+  update_variable_del('support_autocreate_users');
+  update_variable_del('support_filter_uid1');
+  update_variable_del('support_remove_tickets');
+  update_variable_del('support_override_theme');
+  update_variable_del('support_override_block');
+  update_variable_del('support_cron_download_mail');
+  update_variable_del('support_global_domains');
+  update_variable_del('support_thread_by_mail_headers');
+  update_variable_del('support_thread_by_subject');
+  update_variable_del('support_use_aliased_urls');
+  update_variable_del('support_key');
+  update_variable_del('support_mail_upload_field');
+  update_variable_del('support_mail_key');
+  update_variable_del('support_mail_op_notify');
+  update_variable_del('support_download_limit');
 }

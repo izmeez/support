@@ -4,14 +4,14 @@
  * Based on code from api.module.
  */
 (function($) {
-Drupal.behaviors.supportReferenceAutoComplete = {
+Backdrop.behaviors.supportReferenceAutoComplete = {
   attach: function (context) {
     $('#support-reference-block-form:not(.supportReferenceAutoCompleteProcessed)', context).addClass('supportReferenceAutoCompleteProcessed').each(function () {
       // On the first focus.
       $('#edit-reference', this).attr('autocomplete', 'off').one('focus', function () {
         var $this = $(this);
         // Fetch the ticket list.
-        $.getJSON(Drupal.settings.supportReferenceAutoCompletePath, function (data) {
+        $.getJSON(Backdrop.settings.supportReferenceAutoCompletePath, function (data) {
           // Attach to autocomplete.
           $this.autocomplete({
             source: data,

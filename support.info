@@ -10,5 +10,3 @@ dependencies[] = comment
 dependencies[] = file
 dependencies[] = entity
 dependencies[] = entity_api
-; Remove following line and add to module code
-files[] = includes/support.ui.inc

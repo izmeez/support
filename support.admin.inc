@@ -4,10 +4,15 @@
  * @file support.admin.inc
  */
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function _support_admin_default_mail() {
-  $mail = variable_get('support_global_mailfrom', '');
+  $config = config('support.settings');
+  $mail = $config->get('support_global_mailfrom');
   if (empty($mail)) {
-    $mail = variable_get('site_mail', ini_get('sendmail_from'));
+    $mail = config_get('system.performance', 'site_mail');
   }
   return $mail;
 }
@@ -175,7 +180,13 @@ function support_client_form($form, &$form_state, $client, $op = 'edit') {
   $form['mail']['thread_subject'] = array(
     '#type' => 'select',
     '#title' => t('Thread emails using subject'),
-    '#options' => array(0 => 'Use global setting', 1 => 'Disabled', 2 => 'Match against new tickets', 3 => 'Match against open tickets', 4 => 'Match against all tickets'),
+    '#options' => array(
+      0 => 'Use global setting',
+      1 => 'Disabled',
+      2 => 'Match against new tickets',
+      3 => 'Match against open tickets',
+      4 => 'Match against all tickets',
+    ),
     '#description' => t('When enabled, the entire message subject will be used to match replies with the original tickets.  By default the !settings configuration will be used, however, you can override this global configuration here.', array('!settings' => l(t('general support settings'), 'admin/support/settings'))),
     '#default_value' => $client->thread_subject,
   );
@@ -231,6 +242,10 @@ function support_client_form($form, &$form_state, $client, $op = 'edit') {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_client_form_validate($form, &$form_state) {
   $client = $form_state['support_client'];
 
@@ -323,13 +338,13 @@ function support_client_form_submit($form, &$form_state) {
 
   switch ($client->save()) {
     case SAVED_NEW:
-      drupal_set_message(t('Client %client created.', array('%client' => $client->name)));
+      backdrop_set_message(t('Client %client created.', array('%client' => $client->name)));
       break;
     case SAVED_UPDATED:
-      drupal_set_message(t('Client %client updated.', array('%client' => $client->name)));
+      backdrop_set_message(t('Client %client updated.', array('%client' => $client->name)));
       break;
     case SAVED_DELETED:
-      drupal_set_message(t('Client %client deleted.', array('%client' => $client->name)));
+      backdrop_set_message(t('Client %client deleted.', array('%client' => $client->name)));
       break;
   }
 
@@ -355,8 +370,14 @@ function support_admin_menu_block_page() {
 }
 
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function support_admin_settings() {
+  $config = config('support.settings');
   $form = array();
+  $form['#config'] = 'support.settings';
 
   $form['general'] = array(
     '#type' => 'fieldset',
@@ -368,43 +389,55 @@ function support_admin_settings() {
     '#type' => 'select',
     '#title' => t('Auto-complete limit'),
     '#description' => t('A threshold above which select fields and checkboxes will turn into autocomplete text fields.  For example, if set to 20 and a ticket can be assigned to 25 users, the assigned widget will be a textfield requiring you to type the user name.  If set to 20 and a ticket can only be assigned to 10 users, the assigned widget will be a drop down select menu listing all matching users.'),
-    '#options' => array(0 => t('always')) + drupal_map_assoc(array(5, 10, 15, 20, 25, 50, 75, 100, 250, 500, 750, 1000)),
-    '#default_value' => variable_get('support_autocomplete_limit', 15),
+    '#options' => array(0 => t('always')) + backdrop_map_assoc(array(5, 10, 15, 20, 25, 50, 75, 100, 250, 500, 750, 1000)),
+    '#default_value' => $config->get('support_autocomplete_limit'),
   );
   $form['general']['support_autoassign_ticket'] = array(
     '#type' => 'textfield',
     '#autocomplete_path' => 'support/autocomplete/assigned',
     '#title' => t('Auto-assign new tickets to'),
     '#description' => t('Enter a username to autoassign new tickets to a specific user (the user must have %admin permissions). Enter %creator to autoassign new tickets to the user creating the ticket. Leave blank or enter %nobody to leave new tickets unassigned. This value can be overridden on a per-client basis.', array('%admin' => t('administer support'), '%creator' => '<' . t('creator') . '>', '%nobody' => '<' . t('nobody') . '>')),
-    '#default_value' => variable_get('support_autoassign_ticket', '<nobody>'),
+    '#default_value' => $config->get('support_autoassign_ticket'),
   );
   $form['general']['support_default_sort_tickets'] = array(
     '#type' => 'radios',
     '#title' => t('Default sort column'),
     '#description' => t('Ticket views are sorted by clicking on the title of any given column.  This options defines the default sort option if no column title has been clicked.'),
-    '#options' => array(SUPPORT_SORT_NONE => t('None'), SUPPORT_SORT_UPDATE => t('Last update'), SUPPORT_SORT_NID => t('Node ID'), SUPPORT_SORT_STATE => t('State'), SUPPORT_SORT_PRIORITY => t('Priority')),
-    '#default_value' => variable_get('support_default_sort_tickets', SUPPORT_SORT_UPDATE),
+    '#options' => array(
+      SUPPORT_SORT_NONE => t('None'),
+      SUPPORT_SORT_UPDATE => t('Last update'),
+      SUPPORT_SORT_NID => t('Node ID'),
+      SUPPORT_SORT_STATE => t('State'),
+      SUPPORT_SORT_PRIORITY => t('Priority'),
+    ),
+    '#default_value' => $config->get('support_default_sort_tickets'),
   );
   $form['general']['support_default_sort_order'] = array(
     '#type' => 'radios',
     '#title' => t('Default sort order'),
     '#description' => t('The default sort order.'),
     '#options' => array(t('Ascending'), t('Descending')),
-    '#default_value' => variable_get('support_default_sort_order', SUPPORT_SORT_DESC),
+    '#default_value' => $config->get('support_default_sort_order'),
   );
   $form['general']['support_secondary_sort_tickets'] = array(
     '#type' => 'radios',
     '#title' => t('Secondary sort column'),
     '#description' => t('Ticket views are sorted by clicking on the title of any given column.  This option allows you to set a secondary sort column.  For example, you can sort tickets by priority, and configure the secondary sort field here to sort all tickets of the same priority by node id. For best performance, do not set a secondary sort column.'),
-    '#options' => array(SUPPORT_SORT_NONE => t('None'), SUPPORT_SORT_UPDATE => t('Last update'), SUPPORT_SORT_NID => t('Node ID'), SUPPORT_SORT_STATE => t('State'), SUPPORT_SORT_PRIORITY => t('Priority')),
-    '#default_value' => variable_get('support_secondary_sort_tickets', SUPPORT_SORT_NONE),
+    '#options' => array(
+      SUPPORT_SORT_NONE => t('None'),
+      SUPPORT_SORT_UPDATE => t('Last update'),
+      SUPPORT_SORT_NID => t('Node ID'),
+      SUPPORT_SORT_STATE => t('State'),
+      SUPPORT_SORT_PRIORITY => t('Priority'),
+    ),
+    '#default_value' => $config->get('support_secondary_sort_tickets'),
   );
   $form['general']['support_secondary_sort_order'] = array(
     '#type' => 'radios',
     '#title' => t('Secondary sort order'),
     '#description' => t('If specifying a secondary sort column, you can also specify a secondary sort order..'),
     '#options' => array(t('Ascending'), t('Descending')),
-    '#default_value' => variable_get('support_secondary_sort_order', SUPPORT_SORT_DESC),
+    '#default_value' => $config->get('support_secondary_sort_order'),
   );
 
   $form['comments'] = array(
@@ -417,19 +450,19 @@ function support_admin_settings() {
     '#type' => 'checkbox',
     '#title' => t('Require comment when bulk-updating tickets'),
     '#description' => t('Require a comment when users with %perm1 or %perm2 permissions bulk-update ticket properties on the ticket overview page.', array('%perm1' => t('edit multiple tickets'), '%perm2' => t('administer support'))),
-    '#default_value' => variable_get('support_require_comment', TRUE),
+    '#default_value' => $config->get('support_require_comment'),
   );
   $form['comments']['support_disable_post_comment'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable %post header', array('%post' => t('Add new comment'))),
     '#description' => t('Disable the %post header displayed when viewing support tickets.', array('%post' => t('Add new comment'))),
-    '#default_value' => variable_get('support_disable_post_comment', FALSE),
+    '#default_value' => $config->get('support_disable_post_comment'),
   );
   $form['comments']['support_disable_comment_reply'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable comment reply link'),
     '#description' => t('Disable the reply link displayed under comments for support tickets. This setting is generally only useful if you plan to display comments as a flat-list with the content submission form displayed inline, !link.', array('!link' => l(t('configured here'), 'admin/structure/types/manage/support-ticket'))),
-    '#default_value' => variable_get('support_disable_comment_reply', FALSE),
+    '#default_value' => $config->get('support_disable_comment_reply'),
   );
 
   $form['notification'] = array(
@@ -442,7 +475,7 @@ function support_admin_settings() {
     '#type' => 'checkbox',
     '#title' => t('Enable'),
     '#description' => t('Globally enable support ticket notifications.  Disable this if you don\'t ever want the support module to send email notifications.  Alternatively, you can globally enable notifications and then disable them on a per-client basis.'),
-    '#default_value' => variable_get('support_notifications', TRUE),
+    '#default_value' => $config->get('support_notifications'),
   );
   $form['notification']['support_admin_notify'] = array(
     '#type' => 'select',
@@ -453,25 +486,25 @@ function support_admin_settings() {
       1 => t('To users with "!perm" permissions', array('!perm' => t('administer support'))),
       2 => t('To all users'),
     ),
-    '#default_value' => variable_get('support_admin_notify', FALSE),
+    '#default_value' => $config->get('support_admin_notify'),
   );
   $form['notification']['support_autosubscribe_creator'] = array(
     '#type' => 'checkbox',
     '#title' => t('Prevent user creating or updating ticket from unsubscribing'),
     '#description' => t('Check this box to prevent the user creating or updating a ticket from unsubscribing from notifications.'),
-    '#default_value' => variable_get('support_autosubscribe_creator', FALSE),
+    '#default_value' => $config->get('support_autosubscribe_creator'),
   );
   $form['notification']['support_autosubscribe_force'] = array(
     '#type' => 'checkbox',
     '#title' => t('Prevent autosubscribed users from unsubscribing'),
     '#description' => t('Check this box to prevent administratively autosubscribed users from unsubscribing from notifications.'),
-    '#default_value' => variable_get('support_autosubscribe_force', FALSE),
+    '#default_value' => $config->get('support_autosubscribe_force'),
   );
   $form['notification']['support_autosubscribe_assigned'] = array(
     '#type' => 'checkbox',
     '#title' => t('Prevent assigned users from unsubscribing'),
     '#description' => t('Check this box to prevent assigned users from unsubscribing from notifications.'),
-    '#default_value' => variable_get('support_autosubscribe_assigned', FALSE),
+    '#default_value' => $config->get('support_autosubscribe_assigned'),
   );
 
   $form['user'] = array(
@@ -484,19 +517,19 @@ function support_admin_settings() {
     '#type' => 'checkbox',
     '#title' => t('Display support ticket links in profile'),
     '#description' => t('Check this box to display links from a user\'s profile page to create new and view their existing support tickets.'),
-    '#default_value' => variable_get('support_display_user_links', TRUE),
+    '#default_value' => $config->get('support_display_user_links'),
   );
   $form['user']['support_autocreate_users'] = array(
     '#title' => t('Auto-create new users on incoming mail'),
     '#type' => 'checkbox',
-    '#default_value' => variable_get('support_autocreate_users', TRUE),
+    '#default_value' => $config->get('support_autocreate_users'),
     '#description' => t('Check this box if you would like the support module to automatically create new user accounts when emails are received from unknown email addresses.  If you uncheck this box and have "Integrate inbound email" enabled for one or more of your clients, notification emails will be sent when emails are discarded notifying the sender that they have to register to be able to create or update support tickets via mail. This option can also be set on a per-client basis.'),
   );
   $admin = user_load(1);
   $form['user']['support_filter_uid1'] = array(
     '#title' => t('Filter UID1 from ticket assignment and subscription lists'),
     '#type' => 'checkbox',
-    '#default_value' => variable_get('support_filter_uid1', FALSE),
+    '#default_value' => $config->get('support_filter_uid1'),
     '#description' => t('Check this box to prevent the user with UID 1 (%admin) from showing up in ticket assignment and subscription lists. Tickets can still be assigned to UID 1 if you use autocomplete text fields and manually type the username when assigning a ticket.', array('%admin' => $admin->name)),
   );
 
@@ -510,19 +543,19 @@ function support_admin_settings() {
     '#type' => 'checkbox',
     '#title' => t('Remove tickets from content search results'),
     '#description' => t('When checked, support will remove tickets from content search results, and tickets can only be searched in their own search tab.  This is necessary to enforce proper access control, only letting a user\'s search return tickets that they have access to.'),
-    '#default_value' => variable_get('support_remove_tickets', TRUE),
+    '#default_value' => $config->get('support_remove_tickets'),
   );
   $form['search']['support_override_theme'] = array(
     '#type' => 'checkbox',
     '#title' => t('Override theme search form'),
     '#description' => t('When checked, support will override the theme search box so that it searches tickets.  When not checked, the theme search box will work normally.'),
-    '#default_value' => variable_get('support_override_theme', FALSE),
+    '#default_value' => $config->get('support_override_theme'),
   );
   $form['search']['support_override_block'] = array(
     '#type' => 'checkbox',
     '#title' => t('Override block search form'),
     '#description' => t('When checked, support will override the default search block so that it searches tickets.  When not checked, the block search form will work normally.'),
-    '#default_value' => variable_get('support_override_block', FALSE),
+    '#default_value' => $config->get('support_override_block'),
   );
 
   $form['mail'] = array(
@@ -541,19 +574,19 @@ function support_admin_settings() {
     '#type' => 'checkbox',
     '#title' => t('Download mail via cron'),
     '#description' => t('When checked, support will try to download client emails each time cron is run.  You may want to disable this if you are not integrating support with email, or if you only wish to download mail manually or via the !path.  If automating the download of mail through the support fetch mail path, be sure to !assign permissions to the necessary role(s).', array('!path' => l(t('support fetch mail path'), 'support/fetch'), '!assign' => l(t('assign "download mail via support/fetch"'), 'admin/people/permissions', array('fragment' => 'module-support')))),
-    '#default_value' => variable_get('support_cron_download_mail', TRUE),
+    '#default_value' => $config->get('support_cron_download_mail'),
   );
   $form['mail']['support_global_domains'] = array(
     '#type' => 'textfield',
     '#title' => t('Globally allowed domains'),
     '#description' => t('Optionally enter one or more comma separated domains which are allowed to automatically create tickets via email.  To allow tickets to be created by any domain enter "*". This value can be overridden on a per-client basis.'),
-    '#default_value' => check_plain(variable_get('support_global_domains', '*')),
+    '#default_value' => check_plain($config->get('support_global_domains')),
   );
   $form['mail']['support_thread_by_mail_headers'] = array(
     '#type' => 'checkbox',
     '#title' => t('Thread emails using mail headers'),
     '#description' => t('When checked, the %message_id, %in_reply_to and %references mail headers wil be used to match replies with the original tickets.', array('%message_id' => t('message_id'), '%in_reply_to' => t('in_reply_to'), '%references' => t('references'))),
-    '#default_value' => variable_get('support_thread_by_mail_headers', TRUE),
+    '#default_value' => $config->get('support_thread_by_mail_headers'),
   );
   $form['mail']['support_thread_by_subject'] = array(
     '#type' => 'select',
@@ -565,13 +598,13 @@ function support_admin_settings() {
       4 => 'Match against all tickets',
     ),
     '#description' => t('When enabled, the entire message subject will be used to match replies with the original tickets.  By default the subject will only be matched against other open tickets.'),
-    '#default_value' => variable_get('support_thread_by_subject', 3),
+    '#default_value' => $config->get('support_thread_by_subject'),
   );
   $form['mail']['support_use_aliased_urls'] = array(
     '#type' => 'checkbox',
     '#title' => t('Use aliased URLs in support notification emails'),
     '#description' => t('By default when the support module generates notification emails it uses aliased URLs in any included links.  By unchecking this box, you configure the support module to use unaliased URLs.  You may want to uncheck this box if the aliased paths to tickets changes frequently, as unaliased paths never change.'),
-    '#default_value' => variable_get('support_use_aliased_urls', TRUE),
+    '#default_value' => $config->get('support_use_aliased_urls'),
   );
 
   return system_settings_form($form);
@@ -623,6 +656,7 @@ function _support_validate_domains($field, $domains = array()) {
  * Settings form for email texts
  */
 function support_admin_mail_settings() {
+  $config = config('support.settings');
   $default_texts = _support_mail_text_default(NULL);
   $textgroups = array(
     'new' => t('New ticket'),
@@ -631,6 +665,7 @@ function support_admin_mail_settings() {
   );
 
   $form = array();
+  $form['#config'] = 'support.settings';
   foreach ($textgroups as $key => $description) {
     $text_key = 'ticket_' . $key;
     $var_key = 'support_mail_' . $text_key;
@@ -640,6 +675,7 @@ function support_admin_mail_settings() {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
+    // TODO This variable was probably removed in Backdrop without replacement.
     $form[$text_key][$var_key . '_subject'] = array(
       '#type' => 'textfield',
       '#title' => t('Subject'),
@@ -647,6 +683,7 @@ function support_admin_mail_settings() {
       '#default_value' => variable_get($var_key . '_subject', $default_texts[$text_key . '_subject']),
       '#required' => TRUE,
     );
+    // TODO This variable was probably removed in Backdrop without replacement.
     $form[$text_key][$var_key . '_body'] = array(
       '#type' => 'textarea',
       '#title' => t('Body'),
@@ -665,8 +702,8 @@ function support_admin_mail_settings() {
   $form['general']['support_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Notification key prefix'),
-    '#description' => t('Used for email threading, appears in notification email subjects as "[!key:12345]"', array('!key' => variable_get('support_key', 'tkt'))),
-    '#default_value' => variable_get('support_key', 'tkt'),
+    '#description' => t('Used for email threading, appears in notification email subjects as "[!key:12345]"', array('!key' => $config->get('support_key'))),
+    '#default_value' => $config->get('support_key'),
     '#required' => TRUE,
   );
   return system_settings_form($form);
