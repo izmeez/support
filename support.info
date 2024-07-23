@@ -1,8 +1,14 @@
+type = module
 name = Support
-package = Support
 description = A simple helpdesk and support ticketing system.
+package = Support
+version = 1.0.0-beta
+backdrop = 1.x
+stylesheets[all][] = support-tickets.css, support_charts.css,
+support-overview.css, support_reference.css
 dependencies[] = comment
 dependencies[] = file
 dependencies[] = entity
+dependencies[] = entity_api
+; Remove following line and add to module code
 files[] = includes/support.ui.inc
-core = 7.x
